@@ -1,0 +1,97 @@
+using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using WebApplication21.Models;
+
+namespace WebApplication21.Controllers
+{
+    public class lolcController : Controller
+    {
+
+        lolcschoolEntities db = new lolcschoolEntities();
+        //
+        // GET: /lolc/
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+
+
+        public ActionResult GetCourses()
+        {
+            using (lolcschoolEntities db = new lolcschoolEntities())
+            {
+
+                var courses = db.records.ToList();
+                return Json(new { data = courses }, JsonRequestBehavior.AllowGet);
+
+            }
+          
+        }
+
+        [HttpGet]
+
+        public JsonResult Edit(int Id)
+        {
+            var course = db.records.Where(a => a.id == Id).FirstOrDefault();
+            return Json(course, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+        public JsonResult Remove(int Id)
+        {
+
+            bool status = false;
+
+            var course = db.records.FirstOrDefault(a => a.id == Id);
+
+            if(course != null)
+            {
+                db.records.Remove(course);
+                db.SaveChanges();
+                status = true;
+            }
+
+            return new JsonResult { Data = new  { status = status } };
+
+        }
+
+
+        public ActionResult save(record rec)
+        {
+
+            bool status = false;
+
+            if(ModelState.IsValid)
+            {
+                using(lolcschoolEntities db = new lolcschoolEntities())
+                {
+
+                    if (rec.id > 0)
+                    {
+                        var v = db.records.Where(a => a.id == rec.id).FirstOrDefault();
+                        if(v != null)
+                        {
+                            v.coursename = rec.coursename;
+                            v.fee = rec.fee;
+                            db.Entry(v).State = EntityState.Modified;
+                        }
+                        }
+                        else
+                        {
+                            db.records.Add(rec);
+                        }
+                        db.SaveChanges();
+                        status = true;
+                    }
+                }
+            return new JsonResult { Data = new { status = status } };       
+   }
+
+  }
+}
